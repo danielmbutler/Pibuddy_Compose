@@ -65,7 +65,6 @@ object Repository {
                         Log.d(TAG, "scanIPs: successful : $it, ips left: $addresscount")
                     } else {
                         // decrement address count
-                        _scanPingTest.value = (ScanResult(it))
                         addresscount--
                         //post new address count value
                         _addressCount.postValue(addresscount)

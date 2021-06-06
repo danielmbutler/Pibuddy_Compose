@@ -18,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -27,8 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -41,6 +46,7 @@ import com.example.myapplication.ui.main.MainScreenContent
 import com.example.myapplication.ui.main.MainViewModel
 import com.example.myapplication.ui.main.PiBuddyAppBar
 import com.example.myapplication.ui.main.PiBuddyDrawContent
+import com.example.myapplication.ui.scan.ScanScreenContent
 import com.example.myapplication.ui.scan.ScanViewModel
 import com.example.myapplication.ui.theme.*
 import com.example.myapplication.utils.NetworkUtils
@@ -138,7 +144,7 @@ fun AppScaffold(
             NavHost(navController = navController, startDestination = "main") {
                 composable("main") { MainFragment(navController, mainViewModel) }
                 composable("scan_fragment") { ScanFragment(scanViewModel) }
-                composable("result_fragment") {}
+                composable("result_fragment") { ResultFragment()}
             }
         }
     )
@@ -169,119 +175,93 @@ private fun ScanFragment(viewModel: ScanViewModel) {
         viewModel.scanIPs()
     }
 
+    ScanScreenContent(
+        addressList = addressList,
+        viewModel = viewModel,
+        addressCount = addressCount,
+        computerDrawable = R.drawable.ic_baseline_computer_24,
+        addButtonDrawable = R.drawable.ic_baseline_add_circle_outline_24
+    )
+
     Log.d("scanFragment", address.toString())
-    Column(modifier = Modifier.background(primary_dark)) {
-        Box(
-            modifier = Modifier
-                .fillMaxHeight(0.80F)
-        ) {
-            LazyColumn(
-                Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .background(Color.White)
-            ) {
-                for (i in addressList) {
-                    if (i.IP.isNotEmpty()) {
-                        item { ScanResultItem(scanResult = i) }
-                    }
-                }
-            }
-        }
-        Row() {
-            ScanBottomSection(viewModel, addressCount)
-        }
-    }
+
 
 
 }
 
-
+@Preview
 @Composable
-fun ScanResultItem(scanResult: ScanResult) {
-    Log.d("scanItem", "ScanResultItem: $scanResult ")
-    Card(
-        Modifier
-            .padding(6.dp)
-            .fillMaxWidth(),
-    ) {
-        Row(modifier = Modifier.fillMaxWidth()){
-            Column() {
-                Text(
-                    text = "Available Device Found",
-                    modifier = Modifier
-                        .padding(6.dp),
-                    color = secondary
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.ic_baseline_computer_24),
-                    contentDescription = "computer Image",
-                    modifier = Modifier
-                        .size(45.dp)
-                        .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
-                        .clickable(true, onClick = { }),
-                )
-            }
-            Column(Modifier.fillMaxWidth()) {
-                Text(
-                    text = scanResult.IP,
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .align(Alignment.Start),
-                    color = primary_dark
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.ic_baseline_add_circle_outline_24),
-                    contentDescription = "computer Image",
-                    modifier = Modifier
-                        .size(45.dp)
-                        .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
-                        .clickable(true, onClick = { })
-                        .align(Alignment.End)
-                    ,
-                )
-            }
-        }
-
-    }
-
-}
-
-@Composable
-private fun ScanBottomSection(viewModel: ScanViewModel, addressCount: Int?) {
+private fun ResultFragment(){
     Column(
         Modifier
             .fillMaxWidth()
-            .background(primary_dark)
-    ) {
+            .fillMaxHeight()
+            .padding(top = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = "Scanning for Devices with port 22 open ......${addressCount ?: 0} addresses remaining",
-            color = Color.White,
+            text = "Results",
+            fontFamily = piBuddyFontFamily,
+            fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            modifier = Modifier.padding(6.dp)
+            textAlign = TextAlign.Center,
+            color = secondary,
         )
-        Button(
-            onClick = { viewModel.cancelScan() },
-            colors = ButtonDefaults.buttonColors(backgroundColor = secondary),
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(8.dp)
-        ) {
-            Text(
-                text = "Stop Scan",
-                color = text_on_secondary
+        
+        Row(Modifier.fillMaxWidth().padding(6.dp)) {
+            Column(
+                modifier =
+                Modifier
+                    .background(secondary_dark)
+                    .fillMaxWidth(0.49F) // fill half of width
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(33.dp)),
+                horizontalAlignment = Alignment.CenterHorizontally
             )
+            {
+               ResultTextBox(title = "Cpu Usage")
+            }
+            Box(modifier = Modifier.fillMaxWidth(0.01F))
+            Column(
+                modifier =
+                Modifier
+                    .background(secondary_dark)
+                    .fillMaxWidth()
+                    .padding(6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+                )
+            {
+                ResultTextBox(title = "Memory Usage")
+            }
         }
-        // invisible row to stop white space issue
-        Row(
-            modifier = Modifier
-                .size(40.dp, 40.dp)
-                .background(primary_dark)
-        ) {
 
-        }
     }
-
 }
+
+@Composable
+fun RoundedBox(shape: Shape, color: Color, size: Dp) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentSize(Alignment.Center)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .clip(shape)
+                .background(color)
+        )
+    }
+}
+
+@Composable
+fun ResultTextBox(title: String){
+    Text(
+        text = title,
+        color = Color.White,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        modifier = Modifier.padding(6.dp)
+    )
+}
+
 

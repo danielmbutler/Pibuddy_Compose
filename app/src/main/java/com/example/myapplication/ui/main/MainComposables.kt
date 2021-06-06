@@ -35,7 +35,7 @@ fun PiBuddyAppBar(
     dialogState: MutableState<Boolean>,
     mainViewModel: MainViewModel
 ) {
-    val appBarStatus  by mainViewModel.appBarStatus.observeAsState()
+    val appBarStatus by mainViewModel.appBarStatus.observeAsState()
     Log.d("appbar", "PiBuddyAppBar: $appBarStatus ")
     TopAppBar(
         title = { Text(text = "PiBuddy") },
@@ -77,7 +77,6 @@ fun PiBuddyDrawContent(drawableId: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .background(primary_light)
-            .fillMaxWidth()
     ) {
 
         Text(
@@ -182,7 +181,10 @@ private fun NavButtons(
 ) {
     Column(Modifier.padding(16.dp)) {
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                onScanButtonClick(false)
+                navHostController.navigate("result_fragment") // post livedata in viewModel to disable side drawer
+            },
             colors = ButtonDefaults.buttonColors(backgroundColor = secondary)
         ) {
             Text(
