@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,14 +18,11 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.myapplication.ui.theme.*
-import com.example.myapplication.utils.ViewState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -70,6 +68,8 @@ fun PiBuddyAppBar(
             }
         })
 }
+
+// side Draw Content
 
 @Composable
 fun PiBuddyDrawContent(drawableId: Int) {
@@ -119,8 +119,11 @@ fun MainScreenContent(
     ) {
 
         MainTitle()
-        DeviceForm()
-        NavButtons(navHostController = navHostController) { mainViewModel.setAppBarStatus(it) }
+        DeviceForm(
+            navHostController = navHostController,
+            { mainViewModel.setAppBarStatus(it) },
+            mainViewModel = mainViewModel
+        )
 
     }
 }
@@ -139,51 +142,59 @@ private fun MainTitle() {
 }
 
 @Composable
-private fun DeviceForm() {
-    Column(Modifier.padding(16.dp)) {
-        val textState = remember { mutableStateOf(TextFieldValue()) }
-        TextField(
-            value = textState.value,
-            onValueChange = { textState.value = it },
-            label = { Text(text = "IP Address....") },
-            colors = pibuddyTextFieldColors()
-        )
-
-    }
-    Column(Modifier.padding(16.dp)) {
-        val textState = remember { mutableStateOf(TextFieldValue()) }
-        TextField(
-            value = textState.value,
-            onValueChange = { textState.value = it },
-            label = { Text(text = "Username....") },
-            colors = pibuddyTextFieldColors()
-        )
-
-
-    }
-    Column(Modifier.padding(16.dp)) {
-        val textState = remember { mutableStateOf(TextFieldValue()) }
-        TextField(
-            value = textState.value,
-            onValueChange = { textState.value = it },
-            label = { Text(text = "Password....") },
-            visualTransformation = PasswordVisualTransformation(), //Password Field
-            colors = pibuddyTextFieldColors(),
-        )
-
-    }
-}
-
-@Composable
-private fun NavButtons(
+private fun DeviceForm(
     navHostController: NavHostController,
-    onScanButtonClick: (Boolean) -> Unit
+    shouldShowSideDrawerButton: (Boolean) -> Unit,
+    mainViewModel: MainViewModel
 ) {
+
+    // form states (rememberSaveAble to persist date on rotation
+    val ipAddressFieldState = rememberSaveable { mutableStateOf("") }
+    val usernameFieldState = rememberSaveable { mutableStateOf("") }
+    val passwordFieldState = rememberSaveable { mutableStateOf("") }
+    val errorState = rememberSaveable { mutableStateOf(false) }
+
+    //form fields
+    ConnectionTextField(
+        errorState = errorState,
+        textValue = ipAddressFieldState,
+        text = "IP Address...."
+    )
+
+    ConnectionTextField(
+        errorState = errorState,
+        textValue = usernameFieldState,
+        text = "Username...."
+    )
+    ConnectionTextField(
+        errorState = errorState,
+        textValue = passwordFieldState,
+        text = "Password...."
+    )
+
     Column(Modifier.padding(16.dp)) {
         Button(
             onClick = {
-                onScanButtonClick(false)
-                navHostController.navigate("result_fragment") // post livedata in viewModel to disable side drawer
+                shouldShowSideDrawerButton(false) // post livedata in viewModel to disable side drawer
+                // validate form fields
+
+                if (ipAddressFieldState.value.isEmpty() ||
+                    usernameFieldState.value.isEmpty() ||
+                    passwordFieldState.value.isEmpty()
+                ) {
+                    errorState.value = true // show error
+                    mainViewModel.showToast("please fill out all forms")// show toast
+                } else {
+                    // attempt connection
+                    mainViewModel.attemptConnection(
+                        ipAddress = ipAddressFieldState.value,
+                        username = usernameFieldState.value,
+                        password = passwordFieldState.value,
+                    "")
+                    navHostController.navigate("result_fragment")
+
+                }
+
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = secondary)
         ) {
@@ -197,7 +208,7 @@ private fun NavButtons(
     Column(Modifier.padding(16.dp)) {
         Button(
             onClick = {
-                onScanButtonClick(false) // post livedata in viewModel to disable side drawer
+                shouldShowSideDrawerButton(false) // post livedata in viewModel to disable side drawer
                 navHostController.navigate("scan_fragment")
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = secondary)
@@ -210,3 +221,20 @@ private fun NavButtons(
     }
 }
 
+
+@Composable
+fun ConnectionTextField(
+    errorState: MutableState<Boolean>,
+    textValue: MutableState<String>,
+    text: String
+) {
+    Column(Modifier.padding(16.dp)) {
+        TextField(
+            value = textValue.value,
+            onValueChange = { textValue.value = it },
+            label = { Text(text = text) },
+            colors = pibuddyTextFieldColors(),
+            isError = errorState.value
+        )
+    }
+}

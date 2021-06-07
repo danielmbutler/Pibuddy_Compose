@@ -1,9 +1,6 @@
 package com.example.myapplication.ui.scan
 
-import android.content.Context
-import android.net.ConnectivityManager
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
@@ -15,7 +12,6 @@ import kotlinx.coroutines.InternalCoroutinesApi
 
 
 class ScanViewModel : ViewModel() {
-    private val TAG = "ScanViewModel"
 
     private val _ips = Repository.scanPingTest
     val ips: LiveData<ScanResult>
@@ -27,7 +23,6 @@ class ScanViewModel : ViewModel() {
         get() = _addressCount
 
     // keep track of current device Ip
-
     private var currentDeviceIp = ""
 
 

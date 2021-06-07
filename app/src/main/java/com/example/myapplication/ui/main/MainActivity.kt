@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.ui.main
 
 
 import android.content.Context
@@ -19,12 +19,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.myapplication.R
 import com.example.myapplication.models.ScanResult
 import com.example.myapplication.ui.dialog.FullScreenDialog
-import com.example.myapplication.ui.main.MainScreenContent
-import com.example.myapplication.ui.main.MainViewModel
-import com.example.myapplication.ui.main.PiBuddyAppBar
-import com.example.myapplication.ui.main.PiBuddyDrawContent
 import com.example.myapplication.ui.result.ResultScreenContent
 import com.example.myapplication.ui.scan.ScanScreenContent
 import com.example.myapplication.ui.scan.ScanViewModel
@@ -39,7 +36,6 @@ import java.lang.NullPointerException
 @InternalCoroutinesApi
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var dialogState: MutableState<Boolean>
     private val mainViewModel: MainViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
 
@@ -56,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             PibuddyTheme {
                 val scaffoldState = rememberScaffoldState()
                 val scope = rememberCoroutineScope()
-                dialogState = remember { mutableStateOf(false) }
+                val dialogState = remember { mutableStateOf(false) }
                 AppScaffold(
                     scaffoldState = scaffoldState,
                     scope = scope,
@@ -75,7 +71,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun initErrorStateObserver() {
         mainViewModel.appErrorStatus.observe(this, Observer {
-            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            //show toast with error message if not already shown
+            if (!it.hasBeenHandled){
+                Toast.makeText(this, it.getContentIfNotHandled(), Toast.LENGTH_SHORT).show()
+            }
         })
     }
 
@@ -133,6 +132,7 @@ fun AppScaffold(
     Scaffold(
         scaffoldState = scaffoldState,
         drawerContent = { PiBuddyDrawContent(R.drawable.ic_baseline_computer_24) },
+        drawerGesturesEnabled = false, // disable swipe on drawer
         topBar = { PiBuddyAppBar(scope, scaffoldState, dialogState, mainViewModel) },
         content = {
             // Help Dialog
