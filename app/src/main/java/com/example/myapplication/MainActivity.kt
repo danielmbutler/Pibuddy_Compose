@@ -11,31 +11,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Observer
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,6 +25,7 @@ import com.example.myapplication.ui.main.MainScreenContent
 import com.example.myapplication.ui.main.MainViewModel
 import com.example.myapplication.ui.main.PiBuddyAppBar
 import com.example.myapplication.ui.main.PiBuddyDrawContent
+import com.example.myapplication.ui.result.ResultScreenContent
 import com.example.myapplication.ui.scan.ScanScreenContent
 import com.example.myapplication.ui.scan.ScanViewModel
 import com.example.myapplication.ui.theme.*
@@ -59,9 +39,9 @@ import java.lang.NullPointerException
 @InternalCoroutinesApi
 class MainActivity : AppCompatActivity() {
 
-    lateinit var dialogState: MutableState<Boolean>
+    private lateinit var dialogState: MutableState<Boolean>
     private val mainViewModel: MainViewModel by viewModels()
-    val scanViewModel: ScanViewModel by viewModels()
+    private val scanViewModel: ScanViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,6 +70,13 @@ class MainActivity : AppCompatActivity() {
 
         }
         getClientWifiAddress()
+        initErrorStateObserver()
+    }
+
+    private fun initErrorStateObserver() {
+        mainViewModel.appErrorStatus.observe(this, Observer {
+            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+        })
     }
 
 
@@ -118,7 +105,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        // whenever backButton is pressed cancel Scanning operation
+        scanViewModel.cancelScan()
+    }
+
 }
+
+
+
+
+// UI Components
 
 
 // App Scaffold
@@ -144,7 +142,7 @@ fun AppScaffold(
             NavHost(navController = navController, startDestination = "main") {
                 composable("main") { MainFragment(navController, mainViewModel) }
                 composable("scan_fragment") { ScanFragment(scanViewModel) }
-                composable("result_fragment") { ResultFragment()}
+                composable("result_fragment") { ResultFragment(mainViewModel)}
             }
         }
     )
@@ -186,82 +184,11 @@ private fun ScanFragment(viewModel: ScanViewModel) {
     Log.d("scanFragment", address.toString())
 
 
-
 }
 
-@Preview
-@Composable
-private fun ResultFragment(){
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .padding(top = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = "Results",
-            fontFamily = piBuddyFontFamily,
-            fontSize = 36.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = secondary,
-        )
-        
-        Row(Modifier.fillMaxWidth().padding(6.dp)) {
-            Column(
-                modifier =
-                Modifier
-                    .background(secondary_dark)
-                    .fillMaxWidth(0.49F) // fill half of width
-                    .padding(6.dp)
-                    .clip(RoundedCornerShape(33.dp)),
-                horizontalAlignment = Alignment.CenterHorizontally
-            )
-            {
-               ResultTextBox(title = "Cpu Usage")
-            }
-            Box(modifier = Modifier.fillMaxWidth(0.01F))
-            Column(
-                modifier =
-                Modifier
-                    .background(secondary_dark)
-                    .fillMaxWidth()
-                    .padding(6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-                )
-            {
-                ResultTextBox(title = "Memory Usage")
-            }
-        }
-
-    }
-}
 
 @Composable
-fun RoundedBox(shape: Shape, color: Color, size: Dp) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentSize(Alignment.Center)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(size)
-                .clip(shape)
-                .background(color)
-        )
-    }
+private fun ResultFragment(viewModel: MainViewModel) {
+        ResultScreenContent(viewModel = viewModel, R.drawable.ic_baseline_add_circle_outline_24)
 }
-
-@Composable
-fun ResultTextBox(title: String){
-    Text(
-        text = title,
-        color = Color.White,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        modifier = Modifier.padding(6.dp)
-    )
-}
-
 

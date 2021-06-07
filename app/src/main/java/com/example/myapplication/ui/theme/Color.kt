@@ -10,4 +10,6 @@ val primary_dark = Color(0xFF7a7a81)
 val secondary_dark = Color(0xff8e0023)
 val text_on_secondary = Color(0xFFFFFFFF)
 val text_on_primary = Color(0xFF000000)
+val restartButtonLight = Color(0xFF80a5e0)
+val restartButtonDark = Color(0xFF2C61B4)
 
