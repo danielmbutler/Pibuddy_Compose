@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,7 +26,9 @@ import com.example.myapplication.models.ScanResult
 import com.example.myapplication.ui.theme.primary_dark
 import com.example.myapplication.ui.theme.secondary
 import com.example.myapplication.ui.theme.text_on_secondary
+import kotlinx.coroutines.InternalCoroutinesApi
 
+@InternalCoroutinesApi
 @Composable
 fun ScanScreenContent(
     addressList: List<ScanResult>,
@@ -34,7 +37,7 @@ fun ScanScreenContent(
     computerDrawable: Int,
     addButtonDrawable: Int
 ) {
-    val progressBarState = remember { mutableStateOf(true) }
+    val progressBarState = rememberSaveable { mutableStateOf(true) }
 
     Column(modifier = Modifier.background(primary_dark)) {
         Box(
@@ -164,6 +167,7 @@ fun ScanResultItem(
 
 }
 
+@InternalCoroutinesApi
 @Composable
 private fun ScanBottomSection(
     viewModel: ScanViewModel,
@@ -171,7 +175,7 @@ private fun ScanBottomSection(
     progressBarState: MutableState<Boolean>
 ) {
 
-    val scanState = remember { mutableStateOf(true) }
+    val scanState = rememberSaveable { mutableStateOf(true) }
     Column(
         Modifier
             .fillMaxWidth()
@@ -187,9 +191,15 @@ private fun ScanBottomSection(
 
         Button(
             onClick = {
-                viewModel.cancelScan()
-                progressBarState.value = !progressBarState.value
-                scanState.value = !scanState.value
+                if (scanState.value){ // if scan is running then cancel scan
+                    viewModel.cancelScan()
+                } else {
+                    viewModel.scanIPs() // restart Scan
+                }
+
+                progressBarState.value = !progressBarState.value // cancel progressBar
+                scanState.value = !scanState.value // change button text
+
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = secondary),
             modifier = Modifier

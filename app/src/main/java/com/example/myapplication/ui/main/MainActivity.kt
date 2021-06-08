@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.Observer
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -160,14 +161,19 @@ private fun MainFragment(navHostController: NavHostController, viewModel: MainVi
 @InternalCoroutinesApi
 @Composable
 private fun ScanFragment(viewModel: ScanViewModel) {
+    // descending count of addresses to be scanned, observe as state will persist the state in composable
     val addressCount by viewModel.addressCount.observeAsState()
+    // valid IP address connection that has been found
     val address by viewModel.ips.observeAsState()
+    // address list to be added to recyclerview
     val addressList = remember { mutableStateListOf<ScanResult>() }
     address?.let {
         addressList.add(it)
     }
 
-    val shouldScan = remember { mutableStateOf(true) }
+    //start scan
+    // used to stop scan restarting on rotation
+    val shouldScan = rememberSaveable { mutableStateOf(true) }
     if (shouldScan.value) {
         shouldScan.value = false
         viewModel.scanIPs()
