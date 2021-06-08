@@ -8,17 +8,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.models.ScanResult
 import com.example.myapplication.repository.Repository
 import com.example.myapplication.utils.NetworkUtils
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.InternalCoroutinesApi
+import javax.inject.Inject
 
+@HiltViewModel
+class ScanViewModel @Inject constructor(
+    private val repository: Repository
+) : ViewModel() {
 
-class ScanViewModel : ViewModel() {
-
-    private val _ips = Repository.scanPingTest
+    private val _ips = repository.scanPingTest
     val ips: LiveData<ScanResult>
         get() = _ips.asLiveData()
 
     // descending count of IP Addresses
-    private val _addressCount = Repository.addressCount
+    private val _addressCount = repository.addressCount
     val addressCount: LiveData<Int>
         get() = _addressCount
 
@@ -34,15 +38,15 @@ class ScanViewModel : ViewModel() {
     @InternalCoroutinesApi
     fun scanIPs() {
         // if client ip has valid IP and a scan is not already running
-        if (currentDeviceIp.isNotEmpty() && !Repository._scanRunning) {
+        if (currentDeviceIp.isNotEmpty() && !repository._scanRunning) {
             val range = NetworkUtils.getIPRange(currentDeviceIp)
-            Repository.scanIPs(range, viewModelScope)
+            repository.scanIPs(range, viewModelScope)
         }
 
     }
 
     fun cancelScan() {
-        Repository.cancelScan()
+        repository.cancelScan()
     }
 
     fun setCurrentDeviceIp(ip: String) {

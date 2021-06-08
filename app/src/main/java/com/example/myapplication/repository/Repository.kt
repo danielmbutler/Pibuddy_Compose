@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.myapplication.models.CommandResults
 import com.example.myapplication.models.ScanResult
+import com.example.myapplication.persistence.ConnectionsDao
 import com.example.myapplication.utils.NetworkUtils
 import com.example.myapplication.utils.Resource
 import kotlinx.coroutines.CoroutineScope
@@ -13,12 +14,15 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 
-object Repository {
-    private const val TAG = "repository"
+class Repository @Inject constructor(
+    private val dao: ConnectionsDao
+) {
+    private val TAG = "repository"
 
     private val _scanPingTest = MutableStateFlow(ScanResult(""))
 

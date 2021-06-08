@@ -8,12 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.models.CommandResults
 import com.example.myapplication.repository.Repository
 import com.example.myapplication.utils.Event
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 const val TAG = "MainViewModel"
-
-class MainViewModel : ViewModel() {
+@HiltViewModel
+class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
     private val _appBarStatus = MutableLiveData(true)
     val appBarStatus: LiveData<Boolean> = _appBarStatus
 
@@ -54,14 +56,14 @@ class MainViewModel : ViewModel() {
         )
         // test connections
         viewModelScope.launch(Dispatchers.IO) {
-            val connectionTest = Repository.pingTest(ipAddress, this)
+            val connectionTest = repository.pingTest(ipAddress, this)
             // check if valid connection is true this will always be filled when returning this function
             if (connectionTest.data?.validConnection == true){
                 Log.d(TAG, "connection success")
                 _appErrorState.postValue(Event("Connection Successful - now running commands..."))
 
                 // run commands
-                val commandResults = Repository.runPiCommands(
+                val commandResults = repository.runPiCommands(
                     username = username,
                     password = password,
                     ipAddress = ipAddress,

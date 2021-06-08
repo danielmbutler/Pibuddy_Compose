@@ -29,12 +29,14 @@ import com.example.myapplication.ui.scan.ScanViewModel
 import com.example.myapplication.ui.theme.*
 import com.example.myapplication.utils.NetworkUtils
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.InternalCoroutinesApi
 import java.lang.NullPointerException
 
 
 @InternalCoroutinesApi
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
