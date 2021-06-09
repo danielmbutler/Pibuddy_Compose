@@ -30,7 +30,6 @@ class Repository @Inject constructor(
     // Flow value for connection text
     val scanPingTest: StateFlow<ScanResult>
             get() = _scanPingTest
-    //val _commandResults = MutableStateFlow<Resource<CommandResults>>(Resource.Initial())
 
     // value to control whether scan should be running
     var _scanRunning = false

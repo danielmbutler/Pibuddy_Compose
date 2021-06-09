@@ -68,7 +68,7 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         // test connections
         viewModelScope.launch(Dispatchers.IO) {
             // check for stored command
-            var storedCommand = repository.getValidConnection(ipAddress)
+            val storedCommand = repository.getValidConnection(ipAddress)
             if (storedCommand != null) {
                 if (storedCommand.storedCommand == null) storedCommand.storedCommand = ""
             }

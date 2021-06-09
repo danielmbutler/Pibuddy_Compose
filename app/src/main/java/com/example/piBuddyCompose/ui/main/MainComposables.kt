@@ -86,7 +86,7 @@ fun PiBuddyDrawerContent(
     navHostController: NavHostController,
     scaffoldState: ScaffoldState,
     scope: CoroutineScope
-    ) {
+) {
     val validConnectionsList = mainViewModel.validConnectionsList.observeAsState()
 
     Log.d("DrawerContent", validConnectionsList.value.toString())
@@ -209,7 +209,11 @@ fun ValidConnectionItem(
                     modifier = Modifier
                         .size(45.dp)
                         .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
-                        .clickable(true, onClick = { mainViewModel.deleteIndividualValidConnection(validConnection)}),
+                        .clickable(
+                            true,
+                            onClick = {
+                                mainViewModel.deleteIndividualValidConnection(validConnection)
+                            }),
                     alignment = Alignment.CenterEnd
                 )
             }
@@ -265,9 +269,9 @@ private fun DeviceForm(
 
     // form states (rememberSaveAble to persist date on rotation
     // if valid connection is now passed in bundle then show place holder
-    val ipAddressFieldState = rememberSaveable { mutableStateOf(validConnection?.ipAddress ?:"") }
+    val ipAddressFieldState = rememberSaveable { mutableStateOf(validConnection?.ipAddress ?: "") }
     val usernameFieldState = rememberSaveable { mutableStateOf(validConnection?.username ?: "") }
-    val passwordFieldState = rememberSaveable { mutableStateOf(validConnection?.password ?:"") }
+    val passwordFieldState = rememberSaveable { mutableStateOf(validConnection?.password ?: "") }
     val errorState = rememberSaveable { mutableStateOf(false) }
 
     //form fields
@@ -308,8 +312,6 @@ private fun DeviceForm(
                         username = usernameFieldState.value,
                         password = passwordFieldState.value,
                     )
-                    navHostController.navigate("result_fragment")
-
                 }
 
             },

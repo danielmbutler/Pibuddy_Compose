@@ -16,12 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.piBuddyCompose.models.CommandResults
 import com.example.piBuddyCompose.ui.common.RoundedBox
 import com.example.piBuddyCompose.ui.main.MainViewModel
 import com.example.piBuddyCompose.ui.theme.*
 
 @Composable
-fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int){
+fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int, outputs: CommandResults?) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -51,7 +52,7 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int){
                 color = Brush.verticalGradient(listOf(secondary_dark, secondary)),
                 width = 0.49F,
                 TitleText = "Cpu Usage",
-                commandOutput = "83%"
+                commandOutput = outputs?.cpuUsage
             )
             Box(modifier = Modifier.fillMaxWidth(0.01F))
             RoundedBox(
@@ -59,7 +60,7 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int){
                 color = Brush.verticalGradient(listOf(secondary_dark, secondary)),
                 width = 1F,
                 TitleText = "Memory Usage",
-                commandOutput = "60%"
+                commandOutput = outputs?.memUsage
             )
 
         }
@@ -76,7 +77,7 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int){
                 color = Brush.verticalGradient(listOf(secondary_dark, secondary)),
                 width = 0.49F,
                 TitleText = "Disk Space Remaining",
-                commandOutput = "83%"
+                commandOutput = outputs?.diskSpace
             )
             Box(modifier = Modifier.fillMaxWidth(0.01F))
             RoundedBox(
@@ -84,25 +85,26 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int){
                 color = Brush.verticalGradient(listOf(secondary_dark, secondary)),
                 width = 1F,
                 TitleText = "Logged In Users",
-                commandOutput = "PI, Daniel"
+                commandOutput = outputs?.loggedInUsers
             )
 
         }
 
         // If custom command
-
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(6.dp)
-        ) {
-            RoundedBox(
-                shape = RoundedCornerShape(32.dp),
-                color = Brush.verticalGradient(listOf(secondary_dark, secondary)),
-                width = 1F,
-                TitleText = "Custom Command",
-                commandOutput = "Hello World"
-            )
+        outputs?.customCommand?.let {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(6.dp)
+            ) {
+                RoundedBox(
+                    shape = RoundedCornerShape(32.dp),
+                    color = Brush.verticalGradient(listOf(secondary_dark, secondary)),
+                    width = 1F,
+                    TitleText = "Custom Command",
+                    commandOutput = it
+                )
+            }
         }
 
         // Restart and Shut Down Buttons
@@ -114,7 +116,7 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int){
         ) {
             RoundedBox(
                 shape = RoundedCornerShape(32.dp),
-                color = Brush.verticalGradient(listOf(primary_dark, primary )),
+                color = Brush.verticalGradient(listOf(primary_dark, primary)),
                 width = 0.49F,
                 TitleText = "POWER OFF",
                 clickable = true,
@@ -136,10 +138,11 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int){
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Image(
                 painter = painterResource(id = addIcon),
-                contentDescription ="Add Custom Command",
+                contentDescription = "Add Custom Command",
                 modifier = Modifier
                     .clickable(true) {
                         // add custom command

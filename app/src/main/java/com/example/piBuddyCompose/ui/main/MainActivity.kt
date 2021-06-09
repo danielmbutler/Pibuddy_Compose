@@ -19,7 +19,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.findNavController
 import com.example.piBuddyCompose.R
+import com.example.piBuddyCompose.models.CommandResults
 import com.example.piBuddyCompose.models.ScanResult
 import com.example.piBuddyCompose.models.ValidConnection
 import com.example.piBuddyCompose.ui.dialog.FullScreenDialog
@@ -41,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
+
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,16 +72,17 @@ class MainActivity : AppCompatActivity() {
 
         }
         getClientWifiAddress()
-        initErrorStateObserver()
+        initStateObservers()
     }
 
-    private fun initErrorStateObserver() {
+    private fun initStateObservers() {
         mainViewModel.appErrorStatus.observe(this, {
             //show toast with error message if not already shown
             if (!it.hasBeenHandled) {
                 Toast.makeText(this, it.getContentIfNotHandled(), Toast.LENGTH_SHORT).show()
             }
         })
+
     }
 
 
@@ -156,7 +160,24 @@ fun AppScaffold(
                     MainFragment(navController, mainViewModel, validConnection)
                 }
                 composable("scan_fragment") { ScanFragment(scanViewModel, navController) }
-                composable("result_fragment") { ResultFragment(mainViewModel) }
+                composable("result_fragment/{outputs}") {
+                    val outputs = navController.previousBackStackEntry?.arguments?.getParcelable<CommandResults>("outputs")
+                    ResultFragment(mainViewModel, outputs)
+                }
+            }
+            /* listen for command results object in mainviewmodel, if this is present it means the app has successful run
+                commands against a device, we should then navigate to the results view
+             */
+            val resultsObject by mainViewModel.deviceConnectionState.observeAsState()
+            resultsObject?.let { results ->
+                if (!results.hasBeenHandled){
+                    // put bundle in backstack
+                    navController.currentBackStackEntry?.arguments?.putParcelable(
+                        "outputs",
+                        results.getContentIfNotHandled()
+                    )
+                    navController.navigate("result_fragment/{outputs}") //navigate
+                }
             }
         }
     )
@@ -211,7 +232,7 @@ private fun ScanFragment(viewModel: ScanViewModel, navHostController: NavHostCon
 
 
 @Composable
-private fun ResultFragment(viewModel: MainViewModel) {
-    ResultScreenContent(viewModel = viewModel, R.drawable.ic_baseline_add_circle_outline_24)
+private fun ResultFragment(viewModel: MainViewModel, outputs: CommandResults?) {
+    ResultScreenContent(viewModel = viewModel, R.drawable.ic_baseline_add_circle_outline_24, outputs)
 }
 
