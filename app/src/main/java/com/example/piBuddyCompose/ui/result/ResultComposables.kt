@@ -22,7 +22,7 @@ import com.example.piBuddyCompose.ui.main.MainViewModel
 import com.example.piBuddyCompose.ui.theme.*
 
 @Composable
-fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int, outputs: CommandResults?) {
+fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: CommandResults?) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -120,7 +120,13 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int, outputs: Command
                 width = 0.49F,
                 TitleText = "POWER OFF",
                 clickable = true,
-                clickFunction = { viewModel.showToast("Powering Off ....") }
+                clickFunction = {
+                    viewModel.powerOffDevice(
+                        ipAddress = outputs?.ipAddress!!,
+                        username = outputs.username!!,
+                        password = outputs.password!!
+                    )
+                }
             )
             Box(modifier = Modifier.fillMaxWidth(0.01F))
             RoundedBox(
@@ -129,7 +135,13 @@ fun ResultScreenContent(viewModel: MainViewModel, addIcon: Int, outputs: Command
                 width = 1F,
                 TitleText = "RESTART",
                 clickable = true,
-                clickFunction = { viewModel.showToast("Restarting ....") }
+                clickFunction = {
+                    viewModel.restartDevice(
+                        ipAddress = outputs?.ipAddress!!,
+                        username = outputs.username!!,
+                        password = outputs.password!!
+                    )
+                }
             )
 
         }

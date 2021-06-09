@@ -19,13 +19,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.findNavController
 import com.example.piBuddyCompose.R
 import com.example.piBuddyCompose.models.CommandResults
 import com.example.piBuddyCompose.models.ScanResult
 import com.example.piBuddyCompose.models.ValidConnection
 import com.example.piBuddyCompose.ui.dialog.FullScreenDialog
 import com.example.piBuddyCompose.ui.result.ResultScreenContent
+import com.example.piBuddyCompose.ui.result.ResultViewModel
 import com.example.piBuddyCompose.ui.scan.ScanScreenContent
 import com.example.piBuddyCompose.ui.scan.ScanViewModel
 import com.example.piBuddyCompose.ui.theme.*
@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
+    private val resultViewModel: ResultViewModel by viewModels()
 
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -64,7 +65,8 @@ class MainActivity : AppCompatActivity() {
                     scope = scope,
                     dialogState = dialogState,
                     mainViewModel,
-                    scanViewModel
+                    scanViewModel,
+                    resultViewModel
                 )
 
 
@@ -78,6 +80,14 @@ class MainActivity : AppCompatActivity() {
     private fun initStateObservers() {
         mainViewModel.appErrorStatus.observe(this, {
             //show toast with error message if not already shown
+            if (!it.hasBeenHandled) {
+                Toast.makeText(this, it.getContentIfNotHandled(), Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        // display messages from result view
+        resultViewModel.appCommandStatus.observe(this, {
+            //show toast with message if not already shown
             if (!it.hasBeenHandled) {
                 Toast.makeText(this, it.getContentIfNotHandled(), Toast.LENGTH_SHORT).show()
             }
@@ -132,6 +142,7 @@ fun AppScaffold(
     dialogState: MutableState<Boolean>,
     mainViewModel: MainViewModel,
     scanViewModel: ScanViewModel,
+    resultViewModel: ResultViewModel,
 ) {
     //Navigation Host
     val navController = rememberNavController()
@@ -162,7 +173,7 @@ fun AppScaffold(
                 composable("scan_fragment") { ScanFragment(scanViewModel, navController) }
                 composable("result_fragment/{outputs}") {
                     val outputs = navController.previousBackStackEntry?.arguments?.getParcelable<CommandResults>("outputs")
-                    ResultFragment(mainViewModel, outputs)
+                    ResultFragment(resultViewModel, outputs)
                 }
             }
             /* listen for command results object in mainviewmodel, if this is present it means the app has successful run
@@ -232,7 +243,7 @@ private fun ScanFragment(viewModel: ScanViewModel, navHostController: NavHostCon
 
 
 @Composable
-private fun ResultFragment(viewModel: MainViewModel, outputs: CommandResults?) {
+private fun ResultFragment(viewModel: ResultViewModel, outputs: CommandResults?) {
     ResultScreenContent(viewModel = viewModel, R.drawable.ic_baseline_add_circle_outline_24, outputs)
 }
 
