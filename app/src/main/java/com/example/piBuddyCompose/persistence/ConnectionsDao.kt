@@ -17,11 +17,11 @@ interface ConnectionsDao {
 
     //Delete
     @Delete()
-    fun deleteSpecificValidConnection(validConnection: ValidConnection)
+    suspend fun deleteSpecificValidConnection(validConnection: ValidConnection)
 
     //Delete
     @Query("DELETE FROM `Valid Connections`")
-    fun deleteAllValidConnections()
+    suspend fun deleteAllValidConnections()
 
     //Insert
     @Insert(onConflict = OnConflictStrategy.REPLACE)

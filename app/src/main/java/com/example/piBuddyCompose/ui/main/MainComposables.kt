@@ -110,7 +110,7 @@ fun PiBuddyDrawerContent(
             )
         }
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { mainViewModel.deleteAllValidConnections() },
             modifier = Modifier
                 .fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(secondary),
@@ -135,7 +135,8 @@ fun PiBuddyDrawerContent(
                             deleteDrawable = deleteDrawable,
                             navHostController = navHostController,
                             scaffoldState = scaffoldState,
-                            coroutineScope = scope
+                            coroutineScope = scope,
+                            mainViewModel = mainViewModel
                         )
                     }
 
@@ -155,7 +156,8 @@ fun ValidConnectionItem(
     deleteDrawable: Int,
     navHostController: NavHostController,
     scaffoldState: ScaffoldState,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    mainViewModel: MainViewModel
 ) {
 
     Log.d(TAG, "ValidConnectionItem: $validConnection")
@@ -207,7 +209,7 @@ fun ValidConnectionItem(
                     modifier = Modifier
                         .size(45.dp)
                         .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
-                        .clickable(true, onClick = { }),
+                        .clickable(true, onClick = { mainViewModel.deleteIndividualValidConnection(validConnection)}),
                     alignment = Alignment.CenterEnd
                 )
             }

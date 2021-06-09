@@ -224,4 +224,12 @@ class Repository @Inject constructor(
         return dao.getSpecificValidConnection(ipAddress = ipAddress)
     }
 
+    suspend fun deleteIndividualValidConnection(validConnection: ValidConnection){
+        dao.deleteSpecificValidConnection(validConnection)
+    }
+
+    suspend fun deleteAllValidConnections(){
+        dao.deleteAllValidConnections()
+    }
+
 }

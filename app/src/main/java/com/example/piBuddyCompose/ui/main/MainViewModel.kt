@@ -106,6 +106,20 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         }
     }
 
+
+    fun deleteIndividualValidConnection(validConnection: ValidConnection){
+        viewModelScope.launch(Dispatchers.Default){
+            repository.deleteIndividualValidConnection(validConnection)
+        }
+
+    }
+
+    fun deleteAllValidConnections(){
+        viewModelScope.launch(Dispatchers.Default) {
+            repository.deleteAllValidConnections()
+        }
+    }
+
     //override Methods
     override fun onCleared() {
         super.onCleared()
