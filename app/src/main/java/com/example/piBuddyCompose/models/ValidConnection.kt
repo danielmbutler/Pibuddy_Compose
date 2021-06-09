@@ -18,5 +18,5 @@ data class ValidConnection(
     @ColumnInfo(name = "password")
     val password: String,
     @ColumnInfo(name = "storedCommand")
-    val storedCommand: String? = null
+    var storedCommand: String? = null
 ): Parcelable

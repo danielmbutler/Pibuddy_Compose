@@ -112,10 +112,7 @@ class Repository @Inject constructor(
 
     // Run performance Related Commands
     suspend fun runPiCommands(
-        ipAddress: String,
-        username: String,
-        password: String,
-        customCommand: String?,
+        validConnection: ValidConnection,
         scope: CoroutineScope
     ): Resource<CommandResults> {
 
@@ -125,9 +122,9 @@ class Repository @Inject constructor(
                 // test command , if we receive hello back then the rest of the commands are assumed to work
                 val testCommand = async {
                     NetworkUtils.executeRemoteCommand(
-                        username,
-                        password,
-                        ipAddress,
+                        validConnection.username,
+                        validConnection.password,
+                        validConnection.ipAddress,
                         "echo hello"
                     )
                 }
@@ -150,45 +147,45 @@ class Repository @Inject constructor(
 
                     val LoggedInUsers = async {
                         NetworkUtils.executeRemoteCommand(
-                            username,
-                            password,
-                            ipAddress,
+                            validConnection.username,
+                            validConnection.password,
+                            validConnection.ipAddress,
                             "who | cut -d' ' -f1 | sort | uniq\n"
                         )
                     }
 
                     val DiskSpace = async {
                         NetworkUtils.executeRemoteCommand(
-                            username,
-                            password,
-                            ipAddress,
+                            validConnection.username,
+                            validConnection.password,
+                            validConnection.ipAddress,
                             "df -hl | grep \'root\' | awk \'BEGIN{print \"\"} {percent+=$5;} END{print percent}\' | column -t"
                         )
                     }
                     //
                     val MemUsage = async {
                         NetworkUtils.executeRemoteCommand(
-                            username,
-                            password,
-                            ipAddress,
+                            validConnection.username,
+                            validConnection.password,
+                            validConnection.ipAddress,
                             "awk '/^Mem/ {printf(\"%u%%\", 100*\$3/\$2);}' <(free -m)"
                         )
                     }
                     val CpuUsage = async {
                         NetworkUtils.executeRemoteCommand(
-                            username,
-                            password,
-                            ipAddress,
+                            validConnection.username,
+                            validConnection.password,
+                            validConnection.ipAddress,
                             "cat <(grep 'cpu ' /proc/stat) <(sleep 1 && grep 'cpu ' /proc/stat) | awk -v RS=\"\" '{print (\$13-\$2+\$15-\$4)*100/(\$13-\$2+\$15-\$4+\$16-\$5)}'"
 
                         )
                     }
-                    customCommand?.let {
+                    validConnection.storedCommand?.let {
                         val CustomCommandRun = async {
                             NetworkUtils.executeRemoteCommand(
-                                username,
-                                password,
-                                ipAddress,
+                                validConnection.username,
+                                validConnection.password,
+                                validConnection.ipAddress,
                                 it
                             )
 
@@ -200,12 +197,15 @@ class Repository @Inject constructor(
                     resultsObject.diskSpace = DiskSpace.await()
                     resultsObject.memUsage = MemUsage.await()
                     resultsObject.loggedInUsers = LoggedInUsers.await()
-                    resultsObject.ipAddress = ipAddress
+                    resultsObject.ipAddress = validConnection.ipAddress
                     Log.d(TAG, "runPiCommands: $resultsObject")
 
                     // store result in DB
                     dao.insertValidConnection(ValidConnection(
-                        ipAddress, username, password
+                        ipAddress = validConnection.ipAddress,
+                        password = validConnection.password,
+                        username = validConnection.username,
+                        storedCommand = validConnection.storedCommand
                     ))
                     commandResult.resume(Resource.Success(resultsObject))
                 }
@@ -216,11 +216,11 @@ class Repository @Inject constructor(
     }
 
     // DB Methods
-    suspend fun getAllValidConnections(): List<ValidConnection> {
+     fun getAllValidConnections(): LiveData<List<ValidConnection>> {
        return dao.getAllValidConnections()
     }
 
-    suspend fun getValidConnection(ipAddress: String): ValidConnection{
+    suspend fun getValidConnection(ipAddress: String): ValidConnection? {
         return dao.getSpecificValidConnection(ipAddress = ipAddress)
     }
 

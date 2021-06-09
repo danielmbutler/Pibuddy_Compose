@@ -22,11 +22,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.piBuddyCompose.models.ScanResult
 import com.example.piBuddyCompose.models.ValidConnection
 import com.example.piBuddyCompose.ui.theme.*
 import kotlinx.coroutines.CoroutineScope
@@ -80,6 +81,8 @@ fun PiBuddyAppBar(
 @Composable
 fun PiBuddyDrawContent(drawableId: Int, mainViewModel: MainViewModel, deleteDrawable: Int) {
     val validConnectionsList = mainViewModel.validConnectionsList.observeAsState()
+
+    Log.d("DrawerContent", validConnectionsList.value.toString())
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,50 +144,50 @@ fun ValidConnectionItem(
     computerDrawable: Int,
     deleteDrawable: Int,
 ) {
-    Column(
+    Row(
         Modifier
             .padding(6.dp)
             .fillMaxWidth(),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Column {
-                Text(
-                    text = "Available Device Found",
-                    modifier = Modifier
-                        .padding(6.dp),
-                    color = secondary
-                )
-                Image(
-                    painter = painterResource(id = computerDrawable),
-                    contentDescription = "computer Image",
-                    modifier = Modifier
-                        .size(45.dp)
-                        .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
-                        .clickable(true, onClick = { }),
-                )
-            }
-            Column(Modifier.fillMaxWidth()) {
-                Text(
-                    text = validConnection.ipAddress,
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .align(Alignment.Start),
-                    color = primary_dark
-                )
+        Column {
+            Text(
+                text = "Available Device Found",
+                modifier = Modifier
+                    .padding(6.dp),
+                color = secondary
+            )
+            Row() {
+                Row(modifier = Modifier.clickable(true){}
+                    .weight(0.75f)) {
+                    Image(
+                        painter = painterResource(id = computerDrawable),
+                        contentDescription = "computer Image",
+                        modifier = Modifier
+                            .size(45.dp)
+                            .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
+                    )
+                    Text(
+                        text = validConnection.ipAddress,
+                        modifier = Modifier
+                            .padding(6.dp),
+                        color = primary_dark,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 Image(
                     painter = painterResource(id = deleteDrawable),
                     contentDescription = "Delete Image",
                     modifier = Modifier
                         .size(45.dp)
                         .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
-                        .clickable(true, onClick = { })
-                        .align(Alignment.End),
+                        .clickable(true, onClick = { }),
+                    alignment = Alignment.CenterEnd
                 )
             }
+
         }
-
     }
-
 }
 
 @Composable
@@ -250,7 +253,8 @@ private fun DeviceForm(
     ConnectionTextField(
         errorState = errorState,
         textValue = passwordFieldState,
-        text = "Password...."
+        text = "Password....",
+        transformation = PasswordVisualTransformation()
     )
 
     Column(Modifier.padding(16.dp)) {
@@ -307,15 +311,29 @@ private fun DeviceForm(
 fun ConnectionTextField(
     errorState: MutableState<Boolean>,
     textValue: MutableState<String>,
-    text: String
+    text: String,
+    transformation: VisualTransformation? = null
 ) {
     Column(Modifier.padding(16.dp)) {
-        TextField(
-            value = textValue.value,
-            onValueChange = { textValue.value = it },
-            label = { Text(text = text) },
-            colors = pibuddyTextFieldColors(),
-            isError = errorState.value
-        )
+        if (transformation != null) {
+            TextField(
+                value = textValue.value,
+                onValueChange = { textValue.value = it },
+                label = { Text(text = text) },
+                colors = pibuddyTextFieldColors(),
+                isError = errorState.value,
+                singleLine = true,
+                visualTransformation = transformation
+            )
+        } else {
+            TextField(
+                value = textValue.value,
+                onValueChange = { textValue.value = it },
+                label = { Text(text = text) },
+                colors = pibuddyTextFieldColors(),
+                isError = errorState.value,
+                singleLine = true,
+            )
+        }
     }
 }

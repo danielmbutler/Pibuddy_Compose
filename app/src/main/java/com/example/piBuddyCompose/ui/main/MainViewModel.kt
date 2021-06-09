@@ -32,7 +32,7 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     val deviceConnectionState: LiveData<Event<CommandResults>> = _deviceConnectionState
 
     // valid Connections Retrieved From Repository
-    private val _validConnectionsList = MutableLiveData<List<ValidConnection>>()
+    private val _validConnectionsList = repository.getAllValidConnections()
     val validConnectionsList: LiveData<List<ValidConnection>> = _validConnectionsList
 
     init {
@@ -68,7 +68,10 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         // test connections
         viewModelScope.launch(Dispatchers.IO) {
             // check for stored command
-            val storedCommand = repository.getValidConnection(ipAddress).storedCommand
+            var storedCommand = repository.getValidConnection(ipAddress)
+            if (storedCommand != null) {
+                if (storedCommand.storedCommand == null) storedCommand.storedCommand = ""
+            }
             val connectionTest = repository.pingTest(ipAddress, this)
             // check if valid connection is true this will always be filled when returning this function
             if (connectionTest.data?.validConnection == true) {
@@ -77,10 +80,12 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
                 // run commands
                 val commandResults = repository.runPiCommands(
-                    username = username,
-                    password = password,
-                    ipAddress = ipAddress,
-                    customCommand = storedCommand,
+                    validConnection = ValidConnection(
+                        ipAddress = ipAddress,
+                        username = username,
+                        password = password,
+                        storedCommand = storedCommand?.storedCommand
+                    ),
                     scope = this
                 )
                 Log.d(TAG, "attemptConnection: results: ${commandResults.data}")
@@ -100,14 +105,6 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
             }
         }
     }
-
-    fun getAllValidConnections() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _validConnectionsList.postValue(repository.getAllValidConnections())
-        }
-
-    }
-
 
     //override Methods
     override fun onCleared() {

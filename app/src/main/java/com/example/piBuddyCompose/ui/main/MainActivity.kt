@@ -150,6 +150,7 @@ fun AppScaffold(
     )
 }
 
+
 // Main Fragment
 @Composable
 private fun MainFragment(navHostController: NavHostController, viewModel: MainViewModel) {

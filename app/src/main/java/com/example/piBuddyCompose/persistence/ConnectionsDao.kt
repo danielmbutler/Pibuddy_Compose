@@ -1,5 +1,6 @@
 package com.example.piBuddyCompose.persistence
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.example.piBuddyCompose.models.ValidConnection
 
@@ -8,11 +9,11 @@ interface ConnectionsDao {
 
     // get all valid connections
     @Query("SELECT * FROM `valid connections`")
-    suspend fun getAllValidConnections() : List<ValidConnection>
+    fun getAllValidConnections() : LiveData<List<ValidConnection>>
 
     // get specific valid connection
     @Query("SELECT * FROM `Valid Connections` WHERE ipAddress == :ipAddress")
-    suspend fun getSpecificValidConnection(ipAddress: String) : ValidConnection
+    suspend fun getSpecificValidConnection(ipAddress: String) : ValidConnection?
 
     //Delete
     @Delete()
