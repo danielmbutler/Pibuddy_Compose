@@ -79,7 +79,14 @@ fun PiBuddyAppBar(
 // side Drawer Content
 
 @Composable
-fun PiBuddyDrawContent(drawableId: Int, mainViewModel: MainViewModel, deleteDrawable: Int) {
+fun PiBuddyDrawerContent(
+    drawableId: Int,
+    mainViewModel: MainViewModel,
+    deleteDrawable: Int,
+    navHostController: NavHostController,
+    scaffoldState: ScaffoldState,
+    scope: CoroutineScope
+    ) {
     val validConnectionsList = mainViewModel.validConnectionsList.observeAsState()
 
     Log.d("DrawerContent", validConnectionsList.value.toString())
@@ -125,7 +132,10 @@ fun PiBuddyDrawContent(drawableId: Int, mainViewModel: MainViewModel, deleteDraw
                         ValidConnectionItem(
                             validConnection = i,
                             computerDrawable = drawableId,
-                            deleteDrawable = deleteDrawable
+                            deleteDrawable = deleteDrawable,
+                            navHostController = navHostController,
+                            scaffoldState = scaffoldState,
+                            coroutineScope = scope
                         )
                     }
 
@@ -143,7 +153,12 @@ fun ValidConnectionItem(
     validConnection: ValidConnection,
     computerDrawable: Int,
     deleteDrawable: Int,
+    navHostController: NavHostController,
+    scaffoldState: ScaffoldState,
+    coroutineScope: CoroutineScope
 ) {
+
+    Log.d(TAG, "ValidConnectionItem: $validConnection")
     Row(
         Modifier
             .padding(6.dp)
@@ -157,7 +172,18 @@ fun ValidConnectionItem(
                 color = secondary
             )
             Row() {
-                Row(modifier = Modifier.clickable(true){}
+                Row(modifier = Modifier
+                    .clickable(true) {
+                        // navigate to main activity and pass parcelable
+                        navHostController.currentBackStackEntry?.arguments?.putParcelable(
+                            "validConnection",
+                            validConnection
+                        )
+                        navHostController.navigate("main/{validConnection}") //pass bundle
+                        coroutineScope.launch {
+                            scaffoldState.drawerState.close() //close draw
+                        }
+                    }
                     .weight(0.75f)) {
                     Image(
                         painter = painterResource(id = computerDrawable),
@@ -193,7 +219,8 @@ fun ValidConnectionItem(
 @Composable
 fun MainScreenContent(
     navHostController: NavHostController,
-    mainViewModel: MainViewModel
+    mainViewModel: MainViewModel,
+    validConnection: ValidConnection?
 ) {
     Column(
         Modifier
@@ -206,7 +233,8 @@ fun MainScreenContent(
         DeviceForm(
             navHostController = navHostController,
             { mainViewModel.setAppBarStatus(it) },
-            mainViewModel = mainViewModel
+            mainViewModel = mainViewModel,
+            validConnection
         )
 
     }
@@ -229,13 +257,15 @@ private fun MainTitle() {
 private fun DeviceForm(
     navHostController: NavHostController,
     shouldShowSideDrawerButton: (Boolean) -> Unit,
-    mainViewModel: MainViewModel
+    mainViewModel: MainViewModel,
+    validConnection: ValidConnection?
 ) {
 
     // form states (rememberSaveAble to persist date on rotation
-    val ipAddressFieldState = rememberSaveable { mutableStateOf("") }
-    val usernameFieldState = rememberSaveable { mutableStateOf("") }
-    val passwordFieldState = rememberSaveable { mutableStateOf("") }
+    // if valid connection is now passed in bundle then show place holder
+    val ipAddressFieldState = rememberSaveable { mutableStateOf(validConnection?.ipAddress ?:"") }
+    val usernameFieldState = rememberSaveable { mutableStateOf(validConnection?.username ?: "") }
+    val passwordFieldState = rememberSaveable { mutableStateOf(validConnection?.password ?:"") }
     val errorState = rememberSaveable { mutableStateOf(false) }
 
     //form fields

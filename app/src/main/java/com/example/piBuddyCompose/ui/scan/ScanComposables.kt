@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -21,20 +23,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.piBuddyCompose.models.ScanResult
+import com.example.piBuddyCompose.models.ValidConnection
 import com.example.piBuddyCompose.ui.theme.primary_dark
 import com.example.piBuddyCompose.ui.theme.secondary
 import com.example.piBuddyCompose.ui.theme.text_on_secondary
 import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.launch
 
 @InternalCoroutinesApi
 @Composable
 fun ScanScreenContent(
     addressList: List<ScanResult>,
     viewModel: ScanViewModel,
-    addressCount: Int?,
     computerDrawable: Int,
-    addButtonDrawable: Int
+    addButtonDrawable: Int,
+    navHostController: NavHostController
 ) {
     val progressBarState = rememberSaveable { mutableStateOf(true) }
 
@@ -58,7 +63,8 @@ fun ScanScreenContent(
                             ScanResultItem(
                                 scanResult = i,
                                 computerDrawable,
-                                addButtonDrawable = addButtonDrawable
+                                addButtonDrawable = addButtonDrawable,
+                                navHostController = navHostController
                             )
                         }
                     }
@@ -66,7 +72,7 @@ fun ScanScreenContent(
             }
         }
         Row(Modifier.fillMaxHeight()) {
-            ScanBottomSection(viewModel, addressCount, progressBarState)
+            ScanBottomSection(viewModel, progressBarState)
         }
     }
 }
@@ -118,12 +124,14 @@ fun ScanResultItem(
     scanResult: ScanResult,
     computerDrawable: Int,
     addButtonDrawable: Int,
+    navHostController: NavHostController
 ) {
     Log.d("scanItem", "ScanResultItem: $scanResult ")
     Card(
         Modifier
             .padding(6.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            ,
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Column {
@@ -156,7 +164,18 @@ fun ScanResultItem(
                     modifier = Modifier
                         .size(45.dp)
                         .clip(RoundedCornerShape(corner = CornerSize(32.dp)))
-                        .clickable(true, onClick = { })
+                        .clickable(true, onClick = {
+                            // navigate to main activity and pass parcelable
+                            navHostController.currentBackStackEntry?.arguments?.putParcelable(
+                                "validConnection",
+                                ValidConnection(
+                                    ipAddress = scanResult.IP,
+                                    username = "",
+                                    password = ""
+                                )
+                            )
+                            navHostController.navigate("main/{validConnection}") //pass bundle
+                        })
                         .align(Alignment.End),
                 )
             }
@@ -170,11 +189,13 @@ fun ScanResultItem(
 @Composable
 private fun ScanBottomSection(
     viewModel: ScanViewModel,
-    addressCount: Int?,
     progressBarState: MutableState<Boolean>
 ) {
 
     val scanState = rememberSaveable { mutableStateOf(true) }
+
+    // descending count of addresses to be scanned, observe as state will persist the state in composable
+    val addressCount by viewModel.addressCount.observeAsState()
     Column(
         Modifier
             .fillMaxWidth()

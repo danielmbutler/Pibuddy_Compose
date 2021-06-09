@@ -15,13 +15,13 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.lifecycle.Observer
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.piBuddyCompose.R
 import com.example.piBuddyCompose.models.ScanResult
+import com.example.piBuddyCompose.models.ValidConnection
 import com.example.piBuddyCompose.ui.dialog.FullScreenDialog
 import com.example.piBuddyCompose.ui.result.ResultScreenContent
 import com.example.piBuddyCompose.ui.scan.ScanScreenContent
@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
+
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,9 +73,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initErrorStateObserver() {
-        mainViewModel.appErrorStatus.observe(this, Observer {
+        mainViewModel.appErrorStatus.observe(this, {
             //show toast with error message if not already shown
-            if (!it.hasBeenHandled){
+            if (!it.hasBeenHandled) {
                 Toast.makeText(this, it.getContentIfNotHandled(), Toast.LENGTH_SHORT).show()
             }
         })
@@ -92,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             addresses.forEach {
                 if (NetworkUtils.validate(it.address.toString().replace("/", ""))) {
                     //Log.d("wifi", "${it.toString()} validated")
-                    // set IP Address in ScanViewmodel
+                    // set IP Address in ScanViewModel
                     scanViewModel.setCurrentDeviceIp(it.toString())
                     availableAddress.add(it.toString())
                 }
@@ -115,8 +116,6 @@ class MainActivity : AppCompatActivity() {
 }
 
 
-
-
 // UI Components
 
 
@@ -128,23 +127,36 @@ fun AppScaffold(
     scope: CoroutineScope,
     dialogState: MutableState<Boolean>,
     mainViewModel: MainViewModel,
-    scanViewModel: ScanViewModel
+    scanViewModel: ScanViewModel,
 ) {
-
+    //Navigation Host
+    val navController = rememberNavController()
     Scaffold(
         scaffoldState = scaffoldState,
-        drawerContent = { PiBuddyDrawContent(R.drawable.ic_baseline_computer_24, mainViewModel, R.drawable.ic_baseline_delete_24) },
+        drawerContent = {
+            PiBuddyDrawerContent(
+                R.drawable.ic_baseline_computer_24,
+                mainViewModel,
+                R.drawable.ic_baseline_delete_24,
+                navHostController = navController,
+                scaffoldState = scaffoldState,
+                scope = scope
+            )
+        },
         drawerGesturesEnabled = false, // disable swipe on drawer
         topBar = { PiBuddyAppBar(scope, scaffoldState, dialogState, mainViewModel) },
         content = {
             // Help Dialog
             FullScreenDialog(showDialog = dialogState, onClose = {})
-            //Navigation Host
-            val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "main") {
-                composable("main") { MainFragment(navController, mainViewModel) }
-                composable("scan_fragment") { ScanFragment(scanViewModel) }
-                composable("result_fragment") { ResultFragment(mainViewModel)}
+
+            NavHost(navController = navController, startDestination = "main/{validConnection}") {
+                composable("main/{validConnection}") //  nav argument for main fragment
+                {
+                    val validConnection = navController.previousBackStackEntry?.arguments?.getParcelable<ValidConnection>("validConnection")
+                    MainFragment(navController, mainViewModel, validConnection)
+                }
+                composable("scan_fragment") { ScanFragment(scanViewModel, navController) }
+                composable("result_fragment") { ResultFragment(mainViewModel) }
             }
         }
     )
@@ -153,18 +165,20 @@ fun AppScaffold(
 
 // Main Fragment
 @Composable
-private fun MainFragment(navHostController: NavHostController, viewModel: MainViewModel) {
-    // MainFragment triggered reshowing menu in app bar
-    viewModel.setAppBarStatus(true)
-    MainScreenContent(navHostController, viewModel)
+private fun MainFragment(
+    navHostController: NavHostController,
+    viewModel: MainViewModel,
+    validConnection: ValidConnection?
+) {
+    Log.d(TAG, "MainFragment: ValidConnection: $validConnection")
+    viewModel.setAppBarStatus(true)// MainFragment triggered reshowing menu in app bar
+    MainScreenContent(navHostController, viewModel, validConnection)
 }
 
 //ScanFragment
 @InternalCoroutinesApi
 @Composable
-private fun ScanFragment(viewModel: ScanViewModel) {
-    // descending count of addresses to be scanned, observe as state will persist the state in composable
-    val addressCount by viewModel.addressCount.observeAsState()
+private fun ScanFragment(viewModel: ScanViewModel, navHostController: NavHostController) {
     // valid IP address connection that has been found
     val address by viewModel.ips.observeAsState()
     // address list to be added to recyclerview
@@ -172,6 +186,7 @@ private fun ScanFragment(viewModel: ScanViewModel) {
     address?.let {
         addressList.add(it)
     }
+    Log.d("addresslist", "ScanFragment: $address")
 
     //start scan
     // used to stop scan restarting on rotation
@@ -184,9 +199,9 @@ private fun ScanFragment(viewModel: ScanViewModel) {
     ScanScreenContent(
         addressList = addressList,
         viewModel = viewModel,
-        addressCount = addressCount,
         computerDrawable = R.drawable.ic_baseline_computer_24,
-        addButtonDrawable = R.drawable.ic_baseline_add_circle_outline_24
+        addButtonDrawable = R.drawable.ic_baseline_add_circle_outline_24,
+        navHostController = navHostController
     )
 
     Log.d("scanFragment", address.toString())
@@ -197,6 +212,6 @@ private fun ScanFragment(viewModel: ScanViewModel) {
 
 @Composable
 private fun ResultFragment(viewModel: MainViewModel) {
-        ResultScreenContent(viewModel = viewModel, R.drawable.ic_baseline_add_circle_outline_24)
+    ResultScreenContent(viewModel = viewModel, R.drawable.ic_baseline_add_circle_outline_24)
 }
 
