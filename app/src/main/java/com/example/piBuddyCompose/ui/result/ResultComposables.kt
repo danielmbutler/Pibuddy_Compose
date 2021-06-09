@@ -8,6 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -17,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.piBuddyCompose.models.CommandResults
+import com.example.piBuddyCompose.ui.common.AlertDialog
 import com.example.piBuddyCompose.ui.common.RoundedBox
 import com.example.piBuddyCompose.ui.main.MainViewModel
 import com.example.piBuddyCompose.ui.theme.*
@@ -107,7 +111,32 @@ fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: Comma
             }
         }
 
-        // Restart and Shut Down Buttons
+        // Restart and Shut Down
+
+        // powerOff dialog
+        val showPowerOffDialog = rememberSaveable{ mutableStateOf(false)}
+        AlertDialog(function = { viewModel.powerOffDevice(
+            ipAddress = outputs?.ipAddress!!,
+            username = outputs.username!!,
+            password = outputs.password!!
+        )}, openDialog = showPowerOffDialog, title = "ShutDown", taskMessage = "Are you sure you want to shutdown your device ?..")
+
+
+        //restart dialog
+        val showRestartDialog = rememberSaveable{ mutableStateOf(false)}
+        AlertDialog(function = { viewModel.restartDevice(
+            ipAddress = outputs?.ipAddress!!,
+            username = outputs.username!!,
+            password = outputs.password!!
+        )}, openDialog = showRestartDialog, title = "Restart", taskMessage = "Are you sure you want to restart your device ?..")
+
+        // dialog settings
+        fun showPowerOffDialogMessage(){
+            showPowerOffDialog.value = true
+        }
+        fun showRestartOffDialogMessage(){
+            showRestartDialog.value = true
+        }
 
         Row(
             Modifier
@@ -121,11 +150,7 @@ fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: Comma
                 TitleText = "POWER OFF",
                 clickable = true,
                 clickFunction = {
-                    viewModel.powerOffDevice(
-                        ipAddress = outputs?.ipAddress!!,
-                        username = outputs.username!!,
-                        password = outputs.password!!
-                    )
+                    showPowerOffDialogMessage()
                 }
             )
             Box(modifier = Modifier.fillMaxWidth(0.01F))
@@ -136,11 +161,7 @@ fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: Comma
                 TitleText = "RESTART",
                 clickable = true,
                 clickFunction = {
-                    viewModel.restartDevice(
-                        ipAddress = outputs?.ipAddress!!,
-                        username = outputs.username!!,
-                        password = outputs.password!!
-                    )
+                    showRestartOffDialogMessage()
                 }
             )
 
