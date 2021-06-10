@@ -1,13 +1,12 @@
 package com.example.piBuddyCompose.ui.result
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.clickable
+import android.widget.TextView
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -19,11 +18,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.piBuddyCompose.models.CommandResults
+import com.example.piBuddyCompose.models.ValidConnection
 import com.example.piBuddyCompose.ui.common.AlertDialog
 import com.example.piBuddyCompose.ui.common.RoundedBox
+import com.example.piBuddyCompose.ui.main.ConnectionTextField
 import com.example.piBuddyCompose.ui.main.MainViewModel
 import com.example.piBuddyCompose.ui.theme.*
+import com.example.piBuddyCompose.utils.Constants
 
 @Composable
 fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: CommandResults?) {
@@ -114,27 +119,42 @@ fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: Comma
         // Restart and Shut Down
 
         // powerOff dialog
-        val showPowerOffDialog = rememberSaveable{ mutableStateOf(false)}
-        AlertDialog(function = { viewModel.powerOffDevice(
-            ipAddress = outputs?.ipAddress!!,
-            username = outputs.username!!,
-            password = outputs.password!!
-        )}, openDialog = showPowerOffDialog, title = "ShutDown", taskMessage = "Are you sure you want to shutdown your device ?..")
+        val showPowerOffDialog = rememberSaveable { mutableStateOf(false) }
+        AlertDialog(
+            function = {
+                viewModel.powerOffDevice(
+                    ipAddress = outputs?.ipAddress!!,
+                    username = outputs.username!!,
+                    password = outputs.password!!
+                )
+            },
+            openDialog = showPowerOffDialog,
+            title = "ShutDown",
+            taskMessage = "Are you sure you want to shutdown your device ?.."
+        )
 
 
         //restart dialog
-        val showRestartDialog = rememberSaveable{ mutableStateOf(false)}
-        AlertDialog(function = { viewModel.restartDevice(
-            ipAddress = outputs?.ipAddress!!,
-            username = outputs.username!!,
-            password = outputs.password!!
-        )}, openDialog = showRestartDialog, title = "Restart", taskMessage = "Are you sure you want to restart your device ?..")
+        val showRestartDialog = rememberSaveable { mutableStateOf(false) }
+        AlertDialog(
+            function = {
+                viewModel.restartDevice(
+                    ipAddress = outputs?.ipAddress!!,
+                    username = outputs.username!!,
+                    password = outputs.password!!
+                )
+            },
+            openDialog = showRestartDialog,
+            title = "Restart",
+            taskMessage = "Are you sure you want to restart your device ?.."
+        )
 
         // dialog settings
-        fun showPowerOffDialogMessage(){
+        fun showPowerOffDialogMessage() {
             showPowerOffDialog.value = true
         }
-        fun showRestartOffDialogMessage(){
+
+        fun showRestartOffDialogMessage() {
             showRestartDialog.value = true
         }
 
@@ -168,6 +188,14 @@ fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: Comma
         }
 
         // Add custom command button
+        val showCustomCommandDialog = rememberSaveable { mutableStateOf(false) }
+        // valid connection object to get sent to custom dialog
+        val validConnection = ValidConnection(
+            ipAddress = outputs?.ipAddress!!,
+            username = outputs.username!!,
+            password = outputs.password!!
+        )
+        ResultDialog(showDialog = showCustomCommandDialog, onClose = { /*TODO*/ }, viewModel, validConnection =validConnection )
         Column(
             Modifier
                 .fillMaxWidth()
@@ -179,10 +207,98 @@ fun ResultScreenContent(viewModel: ResultViewModel, addIcon: Int, outputs: Comma
                 modifier = Modifier
                     .clickable(true) {
                         // add custom command
+                        showCustomCommandDialog.value = true
                     }
                     .size(24.dp)
             )
         }
 
+    }
+}
+
+@Composable
+fun ResultDialog(showDialog: MutableState<Boolean>,
+                 onClose: () -> Unit,
+                 viewModel: ResultViewModel,
+                 validConnection: ValidConnection) {
+    if (showDialog.value) {
+        Dialog(
+            onDismissRequest = onClose,
+            properties =
+            DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+            )
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = primary_light
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.verticalScroll(
+                        enabled = true,
+                        state = rememberScrollState()
+                    )
+                ) {
+                    Column(
+                        Modifier
+                            .padding(16.dp)
+                            .align(Alignment.BottomCenter)
+                    ) {
+
+                        // form states (rememberSaveAble to persist date on rotation
+                        // if valid connection is now passed in bundle then show place holder
+                        val storedCommandFieldState = rememberSaveable { mutableStateOf("") }
+                        val errorState = rememberSaveable { mutableStateOf(false) }
+
+
+                        //form fields
+
+                        Text(text = "Add Additional Command", textAlign = TextAlign.Center)
+                        ConnectionTextField(
+                            errorState = errorState,
+                            textValue = storedCommandFieldState,
+                            text = "CustomCommand"
+                        )
+
+                        Row(
+                            Modifier.padding(16.dp)
+                        ) {
+                            Button(
+                                onClick = { showDialog.value = false },
+                                colors = ButtonDefaults.buttonColors(backgroundColor = secondary),
+                                modifier = Modifier.padding(end = 6.dp)
+                            ) {
+                                Text(
+                                    text = "Close",
+                                    color = text_on_secondary
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    if (storedCommandFieldState.value.isNotEmpty()){
+                                        validConnection.storedCommand = storedCommandFieldState.value
+                                        viewModel.saveStoredCommand(validConnection)
+                                        showDialog.value = false
+                                    } else {
+                                        viewModel.postError("Please add Command")
+                                    }
+
+
+                                },
+                                colors = ButtonDefaults.buttonColors(backgroundColor = secondary)
+                            ) {
+                                Text(
+                                    text = "Add Custom Command",
+                                    color = text_on_secondary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

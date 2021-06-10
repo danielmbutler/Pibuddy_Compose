@@ -357,7 +357,7 @@ fun ConnectionTextField(
                 colors = pibuddyTextFieldColors(),
                 isError = errorState.value,
                 singleLine = true,
-                visualTransformation = transformation
+                visualTransformation = transformation,
             )
         } else {
             TextField(

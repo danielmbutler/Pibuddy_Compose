@@ -123,7 +123,7 @@ class Repository @Inject constructor(
             scope.launch(Dispatchers.IO) {
                 // test command , if we receive hello back then the rest of the commands are assumed to work
                 val testCommand = async {
-                    NetworkUtils.executeRemoteCommand(
+                    executeRemoteCommand(
                         validConnection.username,
                         validConnection.password,
                         validConnection.ipAddress,
@@ -148,7 +148,7 @@ class Repository @Inject constructor(
                     )
 
                     val LoggedInUsers = async {
-                        NetworkUtils.executeRemoteCommand(
+                        executeRemoteCommand(
                             validConnection.username,
                             validConnection.password,
                             validConnection.ipAddress,
@@ -157,7 +157,7 @@ class Repository @Inject constructor(
                     }
 
                     val DiskSpace = async {
-                        NetworkUtils.executeRemoteCommand(
+                        executeRemoteCommand(
                             validConnection.username,
                             validConnection.password,
                             validConnection.ipAddress,
@@ -166,7 +166,7 @@ class Repository @Inject constructor(
                     }
                     //
                     val MemUsage = async {
-                        NetworkUtils.executeRemoteCommand(
+                        executeRemoteCommand(
                             validConnection.username,
                             validConnection.password,
                             validConnection.ipAddress,
@@ -174,7 +174,7 @@ class Repository @Inject constructor(
                         )
                     }
                     val CpuUsage = async {
-                        NetworkUtils.executeRemoteCommand(
+                        executeRemoteCommand(
                             validConnection.username,
                             validConnection.password,
                             validConnection.ipAddress,
@@ -184,7 +184,7 @@ class Repository @Inject constructor(
                     }
                     validConnection.storedCommand?.let {
                         val CustomCommandRun = async {
-                            NetworkUtils.executeRemoteCommand(
+                            executeRemoteCommand(
                                 validConnection.username,
                                 validConnection.password,
                                 validConnection.ipAddress,
@@ -335,6 +335,11 @@ class Repository @Inject constructor(
     }
 
     // DB Methods
+
+    fun saveValidConnection(validConnection: ValidConnection){
+        dao.insertValidConnection(validConnection)
+    }
+
     fun getAllValidConnections(): LiveData<List<ValidConnection>> {
         return dao.getAllValidConnections()
     }

@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
             PibuddyTheme {
                 val scaffoldState = rememberScaffoldState()
                 val scope = rememberCoroutineScope()
-                val dialogState = remember { mutableStateOf(false) }
+                val dialogState = rememberSaveable { mutableStateOf(false) }
                 AppScaffold(
                     scaffoldState = scaffoldState,
                     scope = scope,
