@@ -16,11 +16,11 @@ PiBuddy enables you to connect to your Raspberry Pi and display CPU, Memory, Dis
 
 
 ## Technology used
-* All UI created using jetpack compose,
-* SideDrawer,
+* All UI created using Jetpack Compose,
+* SideDrawer
 * Dialogs
 * Alert Dialogs
-* Lazy Column,
+* Lazy Column
 * AndroidView
 * Compose Navigation
 * Single Activity
