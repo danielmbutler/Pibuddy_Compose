@@ -7,7 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.piBuddyCompose.models.CommandResults
 import com.example.piBuddyCompose.models.ValidConnection
-import com.example.piBuddyCompose.repository.Repository
+import com.example.piBuddyCompose.repository.RepositoryImpl
+import com.example.piBuddyCompose.repository.defaultRepository
 import com.example.piBuddyCompose.utils.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,7 @@ import javax.inject.Inject
 const val TAG = "MainViewModel"
 
 @HiltViewModel
-class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
+class MainViewModel @Inject constructor(private val repository: defaultRepository) : ViewModel() {
 
     // status of appbar (show sidebar Icon Show)
     private val _appBarStatus = MutableLiveData(true)

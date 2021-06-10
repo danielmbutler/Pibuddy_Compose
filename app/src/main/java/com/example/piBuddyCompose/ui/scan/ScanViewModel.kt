@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.piBuddyCompose.models.ScanResult
-import com.example.piBuddyCompose.repository.Repository
+import com.example.piBuddyCompose.repository.RepositoryImpl
 import com.example.piBuddyCompose.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ScanViewModel @Inject constructor(
-    private val repository: Repository
+    private val repository: RepositoryImpl
 ) : ViewModel() {
 
     private val _ips = repository.scanPingTest
@@ -24,7 +24,7 @@ class ScanViewModel @Inject constructor(
     // descending count of IP Addresses
     private val _addressCount = repository.addressCount
     val addressCount: LiveData<Int>
-        get() = _addressCount
+        get() = _addressCount.asLiveData()
 
     // keep track of current device Ip
     private var currentDeviceIp = ""

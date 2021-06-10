@@ -278,9 +278,10 @@ fun ResultDialog(showDialog: MutableState<Boolean>,
                             }
                             Button(
                                 onClick = {
-                                    if (storedCommandFieldState.value.isNotEmpty()){
+                                    if (storedCommandFieldState.value != ""){
                                         validConnection.storedCommand = storedCommandFieldState.value
                                         viewModel.saveStoredCommand(validConnection)
+                                        viewModel.postError("saving command")
                                         showDialog.value = false
                                     } else {
                                         viewModel.postError("Please add Command")

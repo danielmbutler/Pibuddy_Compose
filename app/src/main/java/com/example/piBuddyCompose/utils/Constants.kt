@@ -1,6 +1,8 @@
 package com.example.piBuddyCompose.utils
 
+import android.content.Context
 import android.text.Html
+import android.widget.Toast
 
 object Constants {
 
@@ -46,4 +48,15 @@ object Constants {
             "<p>Successful connections are saved in the side draw on the opening page, <strong>the details are stored on your Device</strong> and will be deleted along with the App.</p>\n" +
             "<p><br><p>Ver 1.0.0 </p></br></p>\n" +
             "<p><br></br></p>")
+
+    fun showToast(context: Context, event: Event<String>){
+        if (!event.hasBeenHandled) {
+            event.getContentIfNotHandled()?.let { message ->
+                if (message.isNotEmpty()) {
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+        }
+    }
 }

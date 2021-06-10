@@ -11,13 +11,14 @@ open class Event<out T>(private val content: T) {
 
     /**
      * Returns the content and prevents its use again. useful for snackbars and toast messages
+     * prevents empty message
      */
     fun getContentIfNotHandled(): T? {
         return if (hasBeenHandled) {
             null
         } else {
             hasBeenHandled = true
-            content
+            if(content.toString() == "") null  else content
         }
     }
 

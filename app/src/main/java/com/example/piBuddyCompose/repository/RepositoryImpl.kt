@@ -24,14 +24,14 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 
-class Repository @Inject constructor(
-    private val dao: ConnectionsDao
-) {
+class RepositoryImpl @Inject constructor(
+    private val dao: ConnectionsDao,
+): defaultRepository {
     private val TAG = "repository"
 
-    private val _scanPingTest = MutableStateFlow(ScanResult(""))
 
     // Flow value for connection text
+    private val _scanPingTest = MutableStateFlow(ScanResult(""))
     val scanPingTest: StateFlow<ScanResult>
         get() = _scanPingTest
 
@@ -39,17 +39,18 @@ class Repository @Inject constructor(
     var _scanRunning = false
 
     // descending value to show how many addresses are left to test
-    private val _addressCount = MutableLiveData<Int>()
-    val addressCount: LiveData<Int>
+    private val _addressCount = MutableStateFlow<Int>(0)
+    val addressCount: StateFlow<Int>
         get() = _addressCount
 
     //accessed from result viewmodel
-    private val _powerOffOrRestartMessage = MutableLiveData<Event<String>>()
-    val powerOffOrRestartMessage: LiveData<Event<String>>
+    private val _powerOffOrRestartMessage = MutableStateFlow(Event(""))
+    override val powerOffOrRestartMessage: StateFlow<Event<String>>
         get() = _powerOffOrRestartMessage
 
 
-    fun scanIPs(netAddresses: Array<String>, scope: CoroutineScope) {
+
+    override fun scanIPs(netAddresses: Array<String>, scope: CoroutineScope) {
         // set scan to running
         _scanRunning = true
         var addresscount = netAddresses.count()
@@ -77,13 +78,13 @@ class Repository @Inject constructor(
                         // decrement address count
                         addresscount--
                         //post new address count value
-                        _addressCount.postValue(addresscount)
+                        _addressCount.value = addresscount
                         Log.d(TAG, "scanIPs: successful : $it, ips left: $addresscount")
                     } else {
                         // decrement address count
                         addresscount--
                         //post new address count value
-                        _addressCount.postValue(addresscount)
+                        _addressCount.value = addresscount
                         Log.d(TAG, "scanIPs: unsuccessful : $it, ips left: $addresscount")
                     }
                 } else {
@@ -93,12 +94,12 @@ class Repository @Inject constructor(
         }
     }
 
-    fun cancelScan() {
+    override fun cancelScan() {
         _scanRunning = false
     }
 
     // test individual IP Address for connection
-    suspend fun pingTest(ip: String, scope: CoroutineScope): Resource<ScanResult> {
+    override suspend fun pingTest(ip: String, scope: CoroutineScope): Resource<ScanResult> {
         return suspendCoroutine { Pingresult ->
             scope.launch(Dispatchers.IO) {
                 val result = NetworkUtils.isPortOpen(ip, 22, 3000)
@@ -113,7 +114,7 @@ class Repository @Inject constructor(
 
 
     // Run performance Related Commands
-    suspend fun runPiCommands(
+    override suspend fun runPiCommands(
         validConnection: ValidConnection,
         scope: CoroutineScope
     ): Resource<CommandResults> {
@@ -221,7 +222,7 @@ class Repository @Inject constructor(
 
     }
 
-    fun restartButtonClick(
+    override fun restartButtonClick(
         ipaddress: String,
         username: String,
         password: String,
@@ -240,7 +241,7 @@ class Repository @Inject constructor(
             Log.d("pingtest", pingtest.await().toString() + ipaddress)
 
             if (!pingtest.await()) {
-                _powerOffOrRestartMessage.postValue(Event("Connection Failure Please Retry.."))
+                _powerOffOrRestartMessage.value = Event("Connection Failure Please Retry..")
 
             } else {
                 // run command
@@ -257,7 +258,7 @@ class Repository @Inject constructor(
 
                 if (!testcommand.await().contains("hello")) {
 
-                    _powerOffOrRestartMessage.postValue(Event("Device Session failure, Please confirm username and password"))
+                    _powerOffOrRestartMessage.value = Event("Device Session failure, Please confirm username and password")
 
                 } else {
 
@@ -271,7 +272,7 @@ class Repository @Inject constructor(
                         )
                     }
 
-                    _powerOffOrRestartMessage.postValue(Event("Your device is now rebooting...."))
+                    _powerOffOrRestartMessage.value = Event("Your device is now rebooting....")
 
                 }
             }
@@ -279,7 +280,7 @@ class Repository @Inject constructor(
         }
     }
 
-    fun powerOffButtonClicked(
+    override fun powerOffButtonClicked(
         username: String,
         password: String,
         IPAddress: String,
@@ -298,7 +299,7 @@ class Repository @Inject constructor(
             //Log.d("pingtest", pingtest.await())
 
             if (!pingtest.await()) {
-                _powerOffOrRestartMessage.postValue(Event("Connection Failure Please Retry.."))
+                _powerOffOrRestartMessage.value = Event("Connection Failure Please Retry..")
 
             } else {
                 // run command
@@ -314,7 +315,7 @@ class Repository @Inject constructor(
                 //Log.d("testcommand", testcommand.await())
 
                 if (!testcommand.await().contains("hello")) {
-                    _powerOffOrRestartMessage.postValue(Event("Device Session failure, Please confirm username and password"))
+                    _powerOffOrRestartMessage.value = Event("Device Session failure, Please confirm username and password")
 
                 } else {
 
@@ -327,7 +328,7 @@ class Repository @Inject constructor(
                             IPAddress, "sudo shutdown -P now"
                         )
                     }
-                    _powerOffOrRestartMessage.postValue(Event("Your device is now shutting down...."))
+                    _powerOffOrRestartMessage.value = Event("Your device is now shutting down....")
 
                 }
             }
@@ -336,23 +337,23 @@ class Repository @Inject constructor(
 
     // DB Methods
 
-    fun saveValidConnection(validConnection: ValidConnection){
+    override fun saveValidConnection(validConnection: ValidConnection){
         dao.insertValidConnection(validConnection)
     }
 
-    fun getAllValidConnections(): LiveData<List<ValidConnection>> {
+    override fun getAllValidConnections(): LiveData<List<ValidConnection>> {
         return dao.getAllValidConnections()
     }
 
-    suspend fun getValidConnection(ipAddress: String): ValidConnection? {
+    override suspend fun getValidConnection(ipAddress: String): ValidConnection? {
         return dao.getSpecificValidConnection(ipAddress = ipAddress)
     }
 
-    suspend fun deleteIndividualValidConnection(validConnection: ValidConnection) {
+    override suspend fun deleteIndividualValidConnection(validConnection: ValidConnection) {
         dao.deleteSpecificValidConnection(validConnection)
     }
 
-    suspend fun deleteAllValidConnections() {
+    override suspend fun deleteAllValidConnections() {
         dao.deleteAllValidConnections()
     }
 

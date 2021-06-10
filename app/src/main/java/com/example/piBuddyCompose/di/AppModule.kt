@@ -3,7 +3,8 @@ package com.example.piBuddyCompose.di
 import android.content.Context
 import com.example.piBuddyCompose.persistence.ConnectionDatabase
 import com.example.piBuddyCompose.persistence.ConnectionsDao
-import com.example.piBuddyCompose.repository.Repository
+import com.example.piBuddyCompose.repository.RepositoryImpl
+import com.example.piBuddyCompose.repository.defaultRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,5 +25,5 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideRepository( dao: ConnectionsDao) = Repository(dao)
+    fun provideRepository( dao: ConnectionsDao): defaultRepository = RepositoryImpl(dao)
 }

@@ -29,6 +29,7 @@ import com.example.piBuddyCompose.ui.result.ResultViewModel
 import com.example.piBuddyCompose.ui.scan.ScanScreenContent
 import com.example.piBuddyCompose.ui.scan.ScanViewModel
 import com.example.piBuddyCompose.ui.theme.*
+import com.example.piBuddyCompose.utils.Constants
 import com.example.piBuddyCompose.utils.NetworkUtils
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
@@ -79,18 +80,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun initStateObservers() {
         mainViewModel.appErrorStatus.observe(this, {
-            //show toast with error message if not already shown
-            if (!it.hasBeenHandled) {
-                Toast.makeText(this, it.getContentIfNotHandled(), Toast.LENGTH_SHORT).show()
-            }
+            //show toast with message if not already shown and message is not empty
+            Constants.showToast(this, it)
         })
 
         // display messages from result view
         resultViewModel.appCommandStatus.observe(this, {
-            //show toast with message if not already shown
-            if (!it.hasBeenHandled) {
-                Toast.makeText(this, it.getContentIfNotHandled(), Toast.LENGTH_SHORT).show()
-            }
+            //show toast with message if not already shown and message is not empty
+            Constants.showToast(this, it)
+        })
+
+        // display errors from result view
+        resultViewModel.resultErrorState.observe(this, {
+            //show toast with message if not already shown and message is not empty
+           Constants.showToast(this, it)
         })
 
     }
@@ -167,12 +170,18 @@ fun AppScaffold(
             NavHost(navController = navController, startDestination = "main/{validConnection}") {
                 composable("main/{validConnection}") //  nav argument for main fragment
                 {
-                    val validConnection = navController.previousBackStackEntry?.arguments?.getParcelable<ValidConnection>("validConnection")
+                    val validConnection =
+                        navController.previousBackStackEntry?.arguments?.getParcelable<ValidConnection>(
+                            "validConnection"
+                        )
                     MainFragment(navController, mainViewModel, validConnection)
                 }
                 composable("scan_fragment") { ScanFragment(scanViewModel, navController) }
                 composable("result_fragment/{outputs}") {
-                    val outputs = navController.previousBackStackEntry?.arguments?.getParcelable<CommandResults>("outputs")
+                    val outputs =
+                        navController.previousBackStackEntry?.arguments?.getParcelable<CommandResults>(
+                            "outputs"
+                        )
                     ResultFragment(resultViewModel, outputs)
                 }
             }
@@ -181,7 +190,7 @@ fun AppScaffold(
              */
             val resultsObject by mainViewModel.deviceConnectionState.observeAsState()
             resultsObject?.let { results ->
-                if (!results.hasBeenHandled){
+                if (!results.hasBeenHandled) {
                     // put bundle in backstack
                     navController.currentBackStackEntry?.arguments?.putParcelable(
                         "outputs",
@@ -244,6 +253,10 @@ private fun ScanFragment(viewModel: ScanViewModel, navHostController: NavHostCon
 
 @Composable
 private fun ResultFragment(viewModel: ResultViewModel, outputs: CommandResults?) {
-    ResultScreenContent(viewModel = viewModel, R.drawable.ic_baseline_add_circle_outline_24, outputs)
+    ResultScreenContent(
+        viewModel = viewModel,
+        R.drawable.ic_baseline_add_circle_outline_24,
+        outputs
+    )
 }
 
